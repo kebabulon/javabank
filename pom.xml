@@ -51,7 +51,6 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>2.1.0-alpha1</version>
-        <scope>test</scope>
     </dependency>
   </dependencies>
 
