@@ -13,17 +13,15 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import javax.swing.JPopupMenu.Separator;
+public class TxtAccountRepository implements AccountRepository {
+    public static final Logger log = LoggerFactory.getLogger(TxtAccountRepository.class);
 
-public class TestAccountRepository implements AccountRepository {
-    public static final Logger log = LoggerFactory.getLogger(TestAccountRepository.class);
-
-    public static final String SEPARTOR = ";";
 
     private final Path file;
 
-    public TestAccountRepository(Path file) {
+    public TxtAccountRepository(Path file) {
         this.file = file;
     }
 
@@ -37,7 +35,7 @@ public class TestAccountRepository implements AccountRepository {
         try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
             String line;
             while((line = reader.readLine()) != null) {
-                if(line.isBlank()) {
+                if(!line.isBlank()) {
                     accounts.add(parse(line));
                 }
             }
@@ -53,7 +51,7 @@ public class TestAccountRepository implements AccountRepository {
 
     @Override
     public Account create(String owner) {
-        if(owner == null || owner.contains(SEPARTOR)) {
+        if(owner == null || owner.contains(AccountUtils.SEPARTOR)) {
             throw new IllegalArgumentException("Invalid owner: " + owner);
         }
         var accounts = findAll();
@@ -69,7 +67,7 @@ public class TestAccountRepository implements AccountRepository {
                 );
 
         try(BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-            writer.write(toLine(account));
+            writer.write(AccountUtils.toLine(account));
             writer.newLine();
         }
         catch(IOException e) {
@@ -77,11 +75,12 @@ public class TestAccountRepository implements AccountRepository {
             throw new RuntimeException(e);
         }
 
+        log.info("Created new account: " + AccountUtils.toLine(account));
         return account;
     }
 
     private static Account parse(String line) {
-        String[] parts = line.split(SEPARTOR);
+        String[] parts = line.split(AccountUtils.SEPARTOR);
         if(parts.length != 3) {
             throw new IllegalArgumentException("Incorrect string: " + line);
         }
@@ -92,9 +91,4 @@ public class TestAccountRepository implements AccountRepository {
                 );
     }
 
-    private static String toLine(Account account) {
-        return account.id() + SEPARTOR
-            + account.owner() + SEPARTOR
-            + account.balance().toString();
-    }
 }
